@@ -26,7 +26,7 @@
     {
       "id": "colorguard",
       "name": "カラーガード",
-      "emoji": "🎌",
+      "emoji": "🇯",
       "status": "gray",
       "note": "未着手",
       "leader": "顧問・部長",
@@ -92,7 +92,7 @@
     {
       "id": "seinenbu-meeting",
       "name": "青年部総会",
-      "emoji": "🏛️",
+      "emoji": "🏗️",
       "status": "gray",
       "note": "未着手",
       "leader": "部長・役員",

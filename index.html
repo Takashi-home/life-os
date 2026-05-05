@@ -441,42 +441,30 @@ let selectedStatus = null;
 async function loadData() {
   const settings = getSettings();
 
-  // Try GitHub first
+  // 1. GitHub API (authoritative when configured)
   if (settings.repo && settings.token) {
     try {
       const data = await fetchFromGitHub(settings);
-      if (data) {
-        domains = data.domains;
-        render();
-        return;
-      }
-    } catch(e) {
-      console.warn('GitHub load failed, using local:', e);
-    }
+      if (data) { domains = data.domains; render(); return; }
+    } catch(e) { console.warn('GitHub load failed:', e); }
   }
 
-  // Fallback to localStorage
-  const local = localStorage.getItem('life-os-domains');
-  if (local) {
-    domains = JSON.parse(local);
-    render();
-    return;
-  }
-
-  // Fetch from data/status.json (UTF-8 guaranteed by GitHub Pages)
+  // 2. Always fetch status.json first (server copy, UTF-8 safe)
   try {
-    const res = await fetch('./data/status.json');
+    const res = await fetch('./data/status.json?v=' + Date.now());
     if (res.ok) {
       const data = await res.json();
       domains = data.domains;
       render();
       return;
     }
-  } catch(e) {
-    console.warn('status.json fetch failed:', e);
-  }
+  } catch(e) { console.warn('status.json fetch failed:', e); }
 
-  // Last resort: hardcoded defaults
+  // 3. Offline fallback: localStorage
+  const local = localStorage.getItem('life-os-domains');
+  if (local) { try { domains = JSON.parse(local); render(); return; } catch(e) {} }
+
+  // 4. Last resort
   domains = getDefaultDomains();
   render();
 }
