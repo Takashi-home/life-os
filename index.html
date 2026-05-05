@@ -642,16 +642,18 @@ async function saveDomain() {
 async function sendSlackNotification(domain, webhookUrl) {
   const emoji = domain.status === 'red' ? '🔴' : '🟡';
   const payload = {
-    text: `${emoji} *Life OS 更新* — ${domain.name}\n` +
-          `ステータス: ${STATUS_LABEL[domain.status]}\n` +
-          `メモ: ${domain.note || '（なし）'}\n` +
-          `更新日: ${today()}`
+    text: `${emoji} *Life OS* — ${domain.name}\n` +
+          `Status: ${STATUS_LABEL[domain.status]}\n` +
+          `Note: ${domain.note || '-'}\n` +
+          `Updated: ${today()}`
   };
   try {
+    // Use form-encoded to avoid CORS preflight block
     await fetch(webhookUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'payload=' + encodeURIComponent(JSON.stringify(payload))
     });
   } catch(e) { console.warn('Slack notification failed:', e); }
 }
