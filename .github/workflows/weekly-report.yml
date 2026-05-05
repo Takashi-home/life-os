@@ -1,0 +1,80 @@
+name: 週次レポート（長向け）
+
+on:
+  schedule:
+    # 毎週日曜 21:00 JST (= 12:00 UTC)
+    - cron: '0 12 * * 0'
+  workflow_dispatch:
+
+jobs:
+  weekly:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate weekly report & notify Slack
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: |
+          python3 << 'EOF'
+          import json
+          import urllib.request
+          import os
+          from datetime import datetime, timezone, timedelta
+
+          JST = timezone(timedelta(hours=9))
+          now = datetime.now(JST)
+          week_end = now.strftime('%Y/%m/%d')
+          week_start = (now - timedelta(days=6)).strftime('%m/%d')
+
+          with open('data/status.json', 'r', encoding='utf-8') as f:
+              data = json.load(f)
+
+          domains = data.get('domains', [])
+
+          status_signal = {'green': '🟢', 'yellow': '🟡', 'red': '🔴', 'gray': '—'}
+          status_label = {'green': '正常', 'yellow': '要確認', 'red': '要対処', 'gray': '未着手'}
+
+          lines = [
+              f"*📋 Life OS 週次レポート — {week_start}〜{week_end}*",
+              "",
+              "*各ドメイン状況*",
+          ]
+
+          for d in domains:
+              sig = status_signal.get(d['status'], '—')
+              note = d.get('note', '—')
+              leader = d.get('leader', '')
+              leader_txt = f" → _{leader}_" if leader else ""
+              lines.append(f"{sig} *{d['emoji']} {d['name']}*{leader_txt}")
+              lines.append(f"   {note}")
+
+          # Action items
+          urgent = [d for d in domains if d['status'] == 'red']
+          attention = [d for d in domains if d['status'] == 'yellow']
+
+          if urgent or attention:
+              lines.append("")
+              lines.append("*来週の要対応*")
+              for d in urgent + attention:
+                  lines.append(f"  • {d['emoji']} {d['name']}: {d.get('note','—')}")
+
+          lines.append("")
+          lines.append("_詳細はLife OSダッシュボードを確認してください_")
+
+          message = '\n'.join(lines)
+
+          webhook = os.environ.get('SLACK_WEBHOOK')
+          if not webhook:
+              print(message)
+          else:
+              payload = json.dumps({'text': message}).encode('utf-8')
+              req = urllib.request.Request(
+                  webhook,
+                  data=payload,
+                  headers={'Content-Type': 'application/json'}
+              )
+              with urllib.request.urlopen(req) as res:
+                  print(f"Slack response: {res.status}")
+          EOF

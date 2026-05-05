@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Life OS</title>
+<style>
+  :root {
+    --green: #22c55e;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --gray: #94a3b8;
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface2: #334155;
+    --text: #f1f5f9;
+    --text-muted: #94a3b8;
+    --accent: #6366f1;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, 'Hiragino Sans', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 90px;
+  }
+
+  /* Header */
+  .header {
+    background: var(--surface);
+    padding: 16px 20px 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid var(--surface2);
+  }
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  .header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+  .header-date { font-size: 12px; color: var(--text-muted); }
+  .settings-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px;
+  }
+  .alert-bar {
+    display: none;
+    background: #7f1d1d;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-top: 10px;
+    font-size: 13px;
+    color: #fca5a5;
+  }
+  .alert-bar.visible { display: block; }
+
+  /* Summary pills */
+  .summary {
+    display: flex;
+    gap: 8px;
+    padding: 12px 20px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .summary::-webkit-scrollbar { display: none; }
+  .pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 13px;
+    white-space: nowrap;
+    border: 1px solid var(--surface2);
+  }
+  .pill-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+  .pill-dot.green { background: var(--green); }
+  .pill-dot.yellow { background: var(--yellow); }
+  .pill-dot.red { background: var(--red); }
+  .pill-dot.gray { background: var(--gray); }
+
+  /* Domain cards */
+  .section-title {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 0 20px;
+    margin-bottom: 8px;
+    margin-top: 4px;
+  }
+  .cards {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 0 16px;
+  }
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    border: 1px solid var(--surface2);
+    transition: transform 0.1s;
+    position: relative;
+    overflow: hidden;
+  }
+  .card:active { transform: scale(0.98); }
+  .card-left-bar {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+  }
+  .card-left-bar.green { background: var(--green); }
+  .card-left-bar.yellow { background: var(--yellow); }
+  .card-left-bar.red { background: var(--red); }
+  .card-left-bar.gray { background: transparent; }
+  .card-emoji { font-size: 26px; }
+  .card-body { flex: 1; min-width: 0; }
+  .card-name { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+  .card-note {
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+  .status-badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+  .status-badge.green { background: #14532d; color: #86efac; }
+  .status-badge.yellow { background: #451a03; color: #fcd34d; }
+  .status-badge.red { background: #7f1d1d; color: #fca5a5; }
+  .status-badge.gray { background: var(--surface2); color: var(--text-muted); }
+  .card-leader { font-size: 11px; color: var(--text-muted); }
+  .approval-badge {
+    position: absolute;
+    top: 8px; right: 8px;
+    background: var(--red);
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 8px;
+  }
+
+  /* FAB */
+  .fab {
+    position: fixed;
+    bottom: 24px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(99,102,241,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    transition: transform 0.2s;
+  }
+  .fab:active { transform: scale(0.93); }
+
+  /* Modal overlay */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 300;
+    align-items: flex-end;
+  }
+  .modal-overlay.visible { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 20px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    animation: slideup 0.25s ease;
+  }
+  @keyframes slideup {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .modal-handle {
+    width: 40px; height: 4px;
+    background: var(--surface2);
+    border-radius: 2px;
+    margin: 0 auto 16px;
+  }
+  .modal-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .modal label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    margin-top: 14px;
+  }
+  .status-options {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .status-option {
+    padding: 10px 4px;
+    border-radius: 10px;
+    border: 2px solid var(--surface2);
+    background: none;
+    color: var(--text);
+    font-size: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .status-option.selected.green { border-color: var(--green); color: var(--green); }
+  .status-option.selected.yellow { border-color: var(--yellow); color: var(--yellow); }
+  .status-option.selected.red { border-color: var(--red); color: var(--red); }
+  .status-option.selected.gray { border-color: var(--gray); color: var(--gray); }
+  .modal textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid #475569;
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 14px;
+    padding: 10px 12px;
+    font-family: inherit;
+    resize: none;
+    height: 72px;
+  }
+  .modal textarea:focus { outline: none; border-color: var(--accent); }
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .btn-cancel {
+    flex: 1;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid var(--surface2);
+    background: none;
+    color: var(--text-muted);
+    font-size: 15px;
+    cursor: pointer;
+  }
+  .btn-save {
+    flex: 2;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    background: var(--accent);
+    color: white;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-save:disabled { opacity: 0.5; }
+
+  /* Settings modal */
+  .settings-section { margin-bottom: 16px; }
+  .settings-section h3 {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .input-group input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid #475569;
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 14px;
+    padding: 10px 12px;
+    font-family: inherit;
+    margin-bottom: 8px;
+  }
+  .input-group input:focus { outline: none; border-color: var(--accent); }
+  .input-group input::placeholder { color: var(--text-muted); }
+  .btn-full {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    background: var(--accent);
+    color: white;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-bottom: 8px;
+  }
+  .btn-full.danger { background: #991b1b; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface2);
+    color: var(--text);
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    z-index: 500;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .toast.visible { opacity: 1; }
+
+  /* Empty state */
+  .empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <h1>⚡ Life OS</h1>
+    <button class="settings-btn" onclick="openSettings()">⚙️</button>
+  </div>
+  <div class="header-date" id="headerDate"></div>
+  <div class="alert-bar" id="alertBar"></div>
+</div>
+
+<div class="summary" id="summaryPills"></div>
+
+<div class="section-title">ドメイン一覧</div>
+<div class="cards" id="cardsContainer"></div>
+
+<button class="fab" onclick="openNewUpdate()">＋</button>
+
+<!-- Domain Edit Modal -->
+<div class="modal-overlay" id="editModal" onclick="handleModalClick(event)">
+  <div class="modal" id="editModalContent">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="editModalTitle"></div>
+
+    <label>ステータス</label>
+    <div class="status-options">
+      <button class="status-option green" data-status="green" onclick="selectStatus('green')">🟢<br>正常</button>
+      <button class="status-option yellow" data-status="yellow" onclick="selectStatus('yellow')">🟡<br>要確認</button>
+      <button class="status-option red" data-status="red" onclick="selectStatus('red')">🔴<br>要対処</button>
+      <button class="status-option gray" data-status="gray" onclick="selectStatus('gray')">⚪<br>未着手</button>
+    </div>
+
+    <label>メモ（長への一言）</label>
+    <textarea id="editNote" placeholder="例：今週の進捗、要確認事項など"></textarea>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('editModal')">キャンセル</button>
+      <button class="btn-save" id="saveBtn" onclick="saveDomain()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal" onclick="handleModalClick(event)">
+  <div class="modal" id="settingsModalContent">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⚙️ 設定</div>
+
+    <div class="settings-section">
+      <h3>GitHub 連携</h3>
+      <div class="input-group">
+        <input type="text" id="settingsRepo" placeholder="owner/repo（例: Takashi-home/life-os）">
+        <input type="password" id="settingsToken" placeholder="GitHub Personal Access Token">
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h3>Slack 通知</h3>
+      <div class="input-group">
+        <input type="text" id="settingsSlack" placeholder="Slack Webhook URL">
+      </div>
+    </div>
+
+    <button class="btn-full" onclick="saveSettings()">設定を保存</button>
+    <button class="btn-full" onclick="testSlack()" style="background:#0f766e;">Slack テスト送信</button>
+    <button class="btn-full danger" onclick="clearData()">データをリセット</button>
+
+    <div class="modal-actions" style="margin-top:8px;">
+      <button class="btn-cancel" onclick="closeModal('settingsModal')">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STATUS_LABEL = { green: '正常', yellow: '要確認', red: '要対処', gray: '未着手' };
+const STATUS_EMOJI = { green: '🟢', yellow: '🟡', red: '🔴', gray: '⚪' };
+let domains = [];
+let editingId = null;
+let selectedStatus = null;
+
+// Load data
+async function loadData() {
+  const settings = getSettings();
+
+  // Try GitHub first
+  if (settings.repo && settings.token) {
+    try {
+      const data = await fetchFromGitHub(settings);
+      if (data) {
+        domains = data.domains;
+        render();
+        return;
+      }
+    } catch(e) {
+      console.warn('GitHub load failed, using local:', e);
+    }
+  }
+
+  // Fallback to localStorage
+  const local = localStorage.getItem('life-os-domains');
+  if (local) {
+    domains = JSON.parse(local);
+  } else {
+    // Load from bundled data
+    domains = getDefaultDomains();
+  }
+  render();
+}
+
+async function fetchFromGitHub({ repo, token }) {
+  const res = await fetch(`https://api.github.com/repos/${repo}/contents/data/status.json`, {
+    headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+  });
+  if (!res.ok) return null;
+  const json = await res.json();
+  const content = atob(json.content.replace(/\n/g,''));
+  const data = JSON.parse(content);
+  localStorage.setItem('life-os-sha', json.sha);
+  return data;
+}
+
+async function saveToGitHub(settings) {
+  const sha = localStorage.getItem('life-os-sha');
+  const data = { updated: today(), domains };
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+  const body = { message: `update: status ${today()}`, content, sha };
+  if (!sha) delete body.sha;
+
+  const res = await fetch(`https://api.github.com/repos/${settings.repo}/contents/data/status.json`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `token ${settings.token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+  if (res.ok) {
+    const json = await res.json();
+    localStorage.setItem('life-os-sha', json.content.sha);
+    return true;
+  }
+  return false;
+}
+
+// Render
+function render() {
+  renderSummary();
+  renderCards();
+  renderAlertBar();
+  updateHeaderDate();
+}
+
+function updateHeaderDate() {
+  const now = new Date();
+  const days = ['日','月','火','水','木','金','土'];
+  document.getElementById('headerDate').textContent =
+    `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} (${days[now.getDay()]})`;
+}
+
+function renderSummary() {
+  const counts = { green: 0, yellow: 0, red: 0, gray: 0 };
+  domains.forEach(d => counts[d.status]++);
+  const labels = { green: '正常', yellow: '要確認', red: '要対処', gray: '未着手' };
+  const container = document.getElementById('summaryPills');
+  container.innerHTML = Object.entries(counts).filter(([,v]) => v > 0).map(([k, v]) =>
+    `<div class="pill"><div class="pill-dot ${k}"></div>${labels[k]} ${v}</div>`
+  ).join('');
+}
+
+function renderAlertBar() {
+  const urgent = domains.filter(d => d.status === 'red');
+  const bar = document.getElementById('alertBar');
+  if (urgent.length > 0) {
+    bar.textContent = `🔴 要対処: ${urgent.map(d => d.name).join('、')}`;
+    bar.classList.add('visible');
+  } else {
+    bar.classList.remove('visible');
+  }
+}
+
+function renderCards() {
+  const container = document.getElementById('cardsContainer');
+  if (domains.length === 0) {
+    container.innerHTML = '<div class="empty">設定からGitHubを連携してください</div>';
+    return;
+  }
+  const sorted = [...domains].sort((a,b) => {
+    const order = { red: 0, yellow: 1, green: 2, gray: 3 };
+    return order[a.status] - order[b.status] || a.priority - b.priority;
+  });
+  container.innerHTML = sorted.map(d => `
+    <div class="card" onclick="openEdit('${d.id}')">
+      <div class="card-left-bar ${d.status}"></div>
+      <div class="card-emoji">${d.emoji}</div>
+      <div class="card-body">
+        <div class="card-name">${d.name}</div>
+        <div class="card-note">${d.note || '—'}</div>
+      </div>
+      <div class="card-right">
+        <span class="status-badge ${d.status}">${STATUS_EMOJI[d.status]} ${STATUS_LABEL[d.status]}</span>
+        ${d.leader ? `<span class="card-leader">→ ${d.leader}</span>` : ''}
+      </div>
+      ${d.pending_approval ? '<div class="approval-badge">要承認</div>' : ''}
+    </div>
+  `).join('');
+}
+
+// Edit modal
+function openEdit(id) {
+  const domain = domains.find(d => d.id === id);
+  if (!domain) return;
+  editingId = id;
+  document.getElementById('editModalTitle').innerHTML = `${domain.emoji} ${domain.name}`;
+  document.getElementById('editNote').value = domain.note || '';
+  selectStatus(domain.status);
+  if (domain.link) {
+    // Add external link button if available
+  }
+  openModal('editModal');
+}
+
+function openNewUpdate() {
+  // If no specific domain, show picker
+  const firstAlert = domains.find(d => d.status === 'red' || d.status === 'yellow');
+  if (firstAlert) openEdit(firstAlert.id);
+  else openEdit(domains[0]?.id);
+}
+
+function selectStatus(s) {
+  selectedStatus = s;
+  document.querySelectorAll('.status-option').forEach(btn => {
+    btn.classList.remove('selected');
+  });
+  const btn = document.querySelector(`.status-option[data-status="${s}"]`);
+  if (btn) btn.classList.add('selected', s);
+}
+
+async function saveDomain() {
+  if (!editingId || !selectedStatus) return;
+  const note = document.getElementById('editNote').value.trim();
+  const idx = domains.findIndex(d => d.id === editingId);
+  if (idx === -1) return;
+
+  domains[idx].status = selectedStatus;
+  domains[idx].note = note;
+  domains[idx].updated = today();
+
+  // Save locally first
+  localStorage.setItem('life-os-domains', JSON.stringify(domains));
+
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = '保存中…';
+
+  const settings = getSettings();
+  let saved = false;
+  if (settings.repo && settings.token) {
+    saved = await saveToGitHub(settings);
+    if (saved) showToast('✅ GitHubに保存しました');
+    else showToast('⚠️ ローカル保存（GitHub接続確認してください）');
+  } else {
+    showToast('✅ ローカル保存しました');
+    saved = true;
+  }
+
+  // Notify Slack if status changed to red/yellow
+  if (settings.slack && (selectedStatus === 'red' || selectedStatus === 'yellow')) {
+    sendSlackNotification(domains[idx], settings.slack);
+  }
+
+  saveBtn.disabled = false;
+  saveBtn.textContent = '保存';
+  closeModal('editModal');
+  render();
+}
+
+// Slack
+async function sendSlackNotification(domain, webhookUrl) {
+  const emoji = domain.status === 'red' ? '🔴' : '🟡';
+  const payload = {
+    text: `${emoji} *Life OS 更新* — ${domain.name}\n` +
+          `ステータス: ${STATUS_LABEL[domain.status]}\n` +
+          `メモ: ${domain.note || '（なし）'}\n` +
+          `更新日: ${today()}`
+  };
+  try {
+    await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  } catch(e) { console.warn('Slack notification failed:', e); }
+}
+
+// Settings
+function getSettings() {
+  return {
+    repo: localStorage.getItem('life-os-repo') || '',
+    token: localStorage.getItem('life-os-token') || '',
+    slack: localStorage.getItem('life-os-slack') || ''
+  };
+}
+
+function openSettings() {
+  const s = getSettings();
+  document.getElementById('settingsRepo').value = s.repo;
+  document.getElementById('settingsToken').value = s.token;
+  document.getElementById('settingsSlack').value = s.slack;
+  openModal('settingsModal');
+}
+
+function saveSettings() {
+  localStorage.setItem('life-os-repo', document.getElementById('settingsRepo').value.trim());
+  localStorage.setItem('life-os-token', document.getElementById('settingsToken').value.trim());
+  localStorage.setItem('life-os-slack', document.getElementById('settingsSlack').value.trim());
+  showToast('✅ 設定を保存しました');
+  closeModal('settingsModal');
+  loadData();
+}
+
+async function testSlack() {
+  const url = document.getElementById('settingsSlack').value.trim();
+  if (!url) { showToast('❌ Slack URLを入力してください'); return; }
+  await sendSlackNotification({
+    name: 'テスト通知',
+    status: 'yellow',
+    note: 'Life OS から接続テストです',
+    emoji: '⚡'
+  }, url);
+  showToast('📨 Slackにテスト送信しました');
+}
+
+function clearData() {
+  if (!confirm('データをリセットしますか？')) return;
+  localStorage.removeItem('life-os-domains');
+  localStorage.removeItem('life-os-sha');
+  domains = getDefaultDomains();
+  render();
+  closeModal('settingsModal');
+  showToast('🗑️ リセットしました');
+}
+
+// Modal helpers
+function openModal(id) {
+  document.getElementById(id).classList.add('visible');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('visible');
+}
+
+function handleModalClick(event) {
+  if (event.target === event.currentTarget) {
+    event.currentTarget.classList.remove('visible');
+  }
+}
+
+// Toast
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('visible');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('visible'), 2500);
+}
+
+// Utilities
+function today() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function getDefaultDomains() {
+  return [
+    { id: 'restaurant', name: '飲食店（和食屋）', emoji: '🍱', status: 'yellow', note: 'レシート自動化 構築中', leader: '父', priority: 1, pending_approval: false, link: '' },
+    { id: 'family', name: '家庭', emoji: '🏠', status: 'gray', note: '未着手', leader: '', priority: 2, pending_approval: false, link: '' },
+    { id: 'colorguard', name: 'カラーガード', emoji: '🎌', status: 'gray', note: '未着手', leader: '顧問・部長', priority: 3, pending_approval: false, link: '' },
+    { id: 'study-senior', name: '高3勉強サポート', emoji: '📚', status: 'gray', note: '未着手', leader: '生徒・保護者', priority: 4, pending_approval: false, link: '' },
+    { id: 'study-others', name: '他学年勉強サポート', emoji: '✏️', status: 'gray', note: '未着手', leader: '生徒・保護者', priority: 5, pending_approval: false, link: '' },
+    { id: 'jobhunt', name: '就活サポート', emoji: '💼', status: 'gray', note: '未着手', leader: '就活生', priority: 6, pending_approval: false, link: '' },
+    { id: 'supernote', name: '天理教スーパーノート', emoji: '📝', status: 'gray', note: 'アプリ運営中', leader: '担当者', priority: 7, pending_approval: false, link: 'https://github.com/Takashi-home/Supernote' },
+    { id: 'seinenbu-events', name: '青年部（運動会・キャンプ）', emoji: '⛺', status: 'gray', note: '未着手', leader: '部長・担当者', priority: 8, pending_approval: false, link: '' },
+    { id: 'seinenbu-meeting', name: '青年部総会', emoji: '🏛️', status: 'gray', note: '未着手', leader: '部長・役員', priority: 9, pending_approval: false, link: '' }
+  ];
+}
+
+// Init
+loadData();
+</script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+{
+  "updated": "2026-05-05",
+  "domains": [
+    {
+      "id": "restaurant",
+      "name": "飲食店（和食屋）",
+      "emoji": "🍱",
+      "status": "yellow",
+      "note": "レシート自動化 構築中",
+      "leader": "父",
+      "priority": 1,
+      "pending_approval": false,
+      "link": ""
+    },
+    {
+      "id": "family",
+      "name": "家庭",
+      "emoji": "🏠",
+      "status": "gray",
+      "note": "未着手",
+      "leader": "",
+      "priority": 2,
+      "pending_approval": false,
+      "link": ""
+    },
+    {
+      "id": "colorguard",
+      "name": "カラーガード",
+      "emoji": "🎌",
+      "status": "gray",
+      "note": "未着手",
+      "leader": "顧問・部長",
+      "priority": 3,
+      "pending_approval": false,
+      "link": ""
+    },
+    {
+      "id": "study-senior",
+      "name": "高3勉強サポート",
+      "emoji": "📚",
+      "status": "gray",
+      "note": "未着手",
+      "leader": "生徒・保護者",
+      "priority": 4,
+      "pending_approval": false,
+      "link": ""
+    },
+    {
+      "id": "study-others",
+      "name": "他学年勉強サポート",
+      "emoji": "✏️",
+      "status": "gray",
+      "note": "未着手",
+      "leader": "生徒・保護者",
+      "priority": 5,
+      "pending_approval": false,
+      "link": ""
+    },
+    {
+      "id": "jobhunt",
+      "name": "就活サポート",
+      "emoji": "💼",
+      "status": "gray",
+      "note": "未着手",
+      "leader": "就活生",
+      "priority": 6,
+      "pending_approval": false,
+      "link": ""
+    },
+    {
+      "id": "supernote",
+      "name": "天理教スーパーノート",
+      "emoji": "📝",
+      "status": "gray",
+      "note": "アプリ運営中",
+      "leader": "担当者",
+      "priority": 7,
+      "pending_approval": false,
+      "link": "https://github.com/Takashi-home/Supernote"
+    },
+    {
+      "id": "seinenbu-events",
+      "name": "青年部（運動会・キャンプ）",
+      "emoji": "⛺",
+      "status": "gray",
+      "note": "未着手",
+      "leader": "部長・担当者",
+      "priority": 8,
+      "pending_approval": false,
+      "link": ""
+    },
+    {
+      "id": "seinenbu-meeting",
+      "name": "青年部総会",
+      "emoji": "🏛️",
+      "status": "gray",
+      "note": "未着手",
+      "leader": "部長・役員",
+      "priority": 9,
+      "pending_approval": false,
+      "link": ""
+    }
+  ]
+}
